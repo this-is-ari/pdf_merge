@@ -1,0 +1,7 @@
+name = PDF Merge
+description = Merges multiple PDF files into a single PDF file.
+core = 7.x
+version = 7.x-1.x-dev
+dependencies[] = file
+dependencies[] = entity
+dependencies[] = file_entity

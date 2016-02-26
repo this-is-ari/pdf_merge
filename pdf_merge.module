@@ -1,0 +1,86 @@
+<?php
+
+
+define("RESULT_FILE_NAME", 'merged');
+
+/**
+ * Implement hook_permission().
+ */
+function pdf_merge_permission() {
+  $permissions = array(
+    'pdf merge' => array(
+      'title' => t('Merge PDF files'),
+      'description' => t('Ability to merge multiple PDF-files into single file.')
+    )
+  );
+
+  return $permissions;
+};
+
+/**
+ * Implements hook_file_operations().
+ */
+function pdf_merge_file_operations() {
+  $operations = array(
+    'pdf_merge' => array(
+      'label' => t('Merge PDF files'),
+      'callback' => 'pdf_merge_multiple'
+    ),
+  );
+  return $operations;
+}
+
+/**
+ * Merges given PDF files into single one.
+ *
+ * @param array $fids
+ *   Array of File ID's.
+ *
+ * @return
+ *   Returns FALSE of empty list of files to merge was given.
+ *   Otherwise return File ID (fid) of result file.
+ */
+function pdf_merge_multiple($fids = array()) {
+  global $user;
+  if (!count($fids)) {
+    return FALSE;
+  }
+  $result_file_name = RESULT_FILE_NAME;
+  $files = file_load_multiple($fids, array());
+  foreach($files as $fid => $file) {
+    // @todo Make this check more flexible.
+    if ($file->filemime == 'application/pdf') {
+      $pdf[] = drupal_realpath($file->uri);
+      // @todo Find a better way to name result files. It could be a dialog at 2nd step.
+      $result_file_name .=  '_' . preg_replace('/\s+/', '_', $file->filename);
+    }
+  }
+  $destination = file_default_scheme() . '://';
+  $uri = $destination . '/' . $result_file_name;
+  if (strlen(drupal_realpath($uri)) >= 250) {
+    // @todo Find better way to have shorter filenames.
+    $uri = substr($uri, 0, 200);
+   }
+  $uri .= '.pdf';
+
+  exec(escapeshellcmd('pdftk ' . implode($pdf, ' ') . ' cat output ' . drupal_realpath($uri)));
+
+  // @todo check status of 'exec' command.
+  if ($uri && is_file($uri)) {
+    // Add file to Drupal's database.
+    $file = new stdClass();
+    $file->fid = NULL;
+    $file->uri = $uri;
+    $file->filename = drupal_basename($uri);
+    $file->filemime = file_get_mimetype($file->uri);
+    $file->uid = $user->uid;
+    $file->status = FILE_STATUS_PERMANENT;
+
+    $file = file_save($file);
+    return $file->fid;
+  }
+  else {
+    watchdog('pdf_merge',  'File %file was not created.', array('%file' => $uri), WATCHDOG_CRITICAL);
+    return FALSE;
+  }
+}

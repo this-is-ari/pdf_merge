@@ -1,0 +1,28 @@
+<?php
+
+/**
+ * Implements hook_requirements().
+ */
+function pdf_merge_requirements($phase) {
+  $requirements = array();
+  $t = get_t();
+  if (in_array($phase, array('install', 'runtime'))) {
+    exec('pdftk', $output, $status);
+    $requirements['pdf_merge_pdftk_library'] = array(
+      'title' => $t('PDFtk Library'),
+      'description' => $t('The PDFtk library required for PDF Merge module. '
+        . 'Download it from !pdftk-site and install.',
+        array('!pdftk-site' => l('http://pdftk.com', 'http://pdftk.com')))
+    );
+    if (in_array($status, array(127, 126))) {
+      $requirements['pdf_merge_pdftk_library']['value'] = $t('Not installed');
+      $requirements['pdf_merge_pdftk_library']['severity'] = REQUIREMENT_ERROR;
+    }
+    else {
+      $requirements['pdf_merge_pdftk_library']['value'] = $t('Installed');
+      $requirements['pdf_merge_pdftk_library']['severity'] = REQUIREMENT_OK;
+    }
+  }
+
+  return $requirements;
+}
