@@ -5,3 +5,5 @@ version = 7.x-1.x-dev
 dependencies[] = file
 dependencies[] = entity
 dependencies[] = file_entity
+
+files[] = pdf_merge.rules.inc

@@ -52,18 +52,20 @@ function pdf_merge_multiple($fids = array()) {
     if ($file->filemime == 'application/pdf') {
       $pdf[] = drupal_realpath($file->uri);
       // @todo Find a better way to name result files. It could be a dialog at 2nd step.
-      $result_file_name .=  '_' . preg_replace('/\s+/', '_', $file->filename);
+      $result_file_name .=  '_' . $file->filename;
     }
   }
-  $destination = file_default_scheme() . '://';
-  $uri = $destination . '/' . $result_file_name;
-  if (strlen(drupal_realpath($uri)) >= 250) {
-    // @todo Find better way to have shorter filenames.
-    $uri = substr($uri, 0, 200);
-   }
-  $uri .= '.pdf';
 
-  exec(escapeshellcmd('pdftk ' . implode($pdf, ' ') . ' cat output ' . drupal_realpath($uri)));
+  $destination = drupal_realpath(file_default_scheme() . '://');
+  $uri = file_create_filename(substr($result_file_name, 0, 100) . '.pdf', $destination);
+
+  // Check if we have enough PDF files to merge.
+  if (empty($pdf)) {
+    return FALSE;
+  }
+
+  // Merge them.
+  exec(escapeshellcmd('pdftk ' . implode($pdf, ' ') . ' cat output ' . $uri));
 
   // @todo check status of 'exec' command.
   if ($uri && is_file($uri)) {
