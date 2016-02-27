@@ -14,10 +14,16 @@ function pdf_merge_rules_action_info() {
       'label' => t('Merge PDF files'),
       'group' => t('PDF Forms'),
       'parameter' => array(
-        'entity_id_list' => array(
-          'type' => 'list<integer>',
-          'label' => t('PDF files to merge'),
-          'description' => t('Select the list of PDF files to merge. Hold [Ctrl] to select multiple roles.'),
+        'entity_objects' => array(
+          'type' => 'list<file>',
+          'label' => t('PDF file entities to merge'),
+          'description' => t('Select the list of PDF file entities to merge.'),
+        ),
+      ),
+      'provides' => array(
+        'merged_pdf' => array(
+          'type' => 'file',
+          'label' => t('Merged PDF File'),
         ),
       ),
     ),
@@ -33,13 +39,11 @@ function pdf_merge_rules_action_info() {
  * @param array $entity_id_list
  *   List of entities of 'document' type.
  */
-function pdf_merge_rules_action($entity_id_list) {
+function pdf_merge_rules_action($entity_objects) {
   // Get list of fid of related PDF files.
-  $documents = entity_load('document', $entity_id_list);
-  $fids = array();
-  foreach ($documents as $doc) {
-    //@todo Avoid hardcoded field name.
-    $fids[] = $doc->field_pdf_file[LANGUAGE_NONE][0]['fid'];
+  foreach ($entity_objects as $entity) {
+    $fids[] = $entity->fid;
   }
+
   pdf_merge_multiple($fids);
 }
