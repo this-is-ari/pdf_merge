@@ -79,7 +79,7 @@ function pdf_merge_multiple($fids = array()) {
     $file->status = FILE_STATUS_PERMANENT;
 
     $file = file_save($file);
-    return $file->fid;
+    return $file;
   }
   else {
     watchdog('pdf_merge',  'File %file was not created.', array('%file' => $uri), WATCHDOG_CRITICAL);

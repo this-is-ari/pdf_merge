@@ -12,7 +12,7 @@ function pdf_merge_rules_action_info() {
   return array(
     'pdf_merge_rules_action' => array(
       'label' => t('Merge PDF files'),
-      'group' => t('PDF Forms'),
+      'group' => t('PDF'),
       'parameter' => array(
         'entity_objects' => array(
           'type' => 'list<file>',
@@ -44,6 +44,8 @@ function pdf_merge_rules_action($entity_objects) {
   foreach ($entity_objects as $entity) {
     $fids[] = $entity->fid;
   }
-
-  pdf_merge_multiple($fids);
+  
+  $file = pdf_merge_multiple($fids);
+  $result = ($file != FALSE) ? array('merged_pdf' => $file) : FALSE;
+  return $result;
 }
